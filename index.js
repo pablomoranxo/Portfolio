@@ -82,27 +82,31 @@
   /* ══════════════════════════════════════════════
      CURSOR FOLLOWER
      ══════════════════════════════════════════════ */
+  var isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
   var follower = document.createElement('div');
   follower.id  = 'cursor-follower';
-  document.body.appendChild(follower);
+  if (!isTouchDevice) document.body.appendChild(follower);
 
   var fX = 0, fY = 0, mX = 0, mY = 0, fVisible = false;
 
-  document.addEventListener('mousemove', function (e) {
-    mX = e.clientX;
-    mY = e.clientY;
-    if (!fVisible) { fX = mX; fY = mY; follower.style.opacity = '1'; fVisible = true; }
-  });
-  document.addEventListener('mouseleave', function () {
-    follower.style.opacity = '0'; fVisible = false;
-  });
+  if (!isTouchDevice) {
+    document.addEventListener('mousemove', function (e) {
+      mX = e.clientX;
+      mY = e.clientY;
+      if (!fVisible) { fX = mX; fY = mY; follower.style.opacity = '1'; fVisible = true; }
+    });
+    document.addEventListener('mouseleave', function () {
+      follower.style.opacity = '0'; fVisible = false;
+    });
 
-  (function animFollower() {
-    fX += (mX - fX) * 0.12;
-    fY += (mY - fY) * 0.12;
-    follower.style.transform = 'translate(' + (fX - 13) + 'px,' + (fY - 13) + 'px)';
-    requestAnimationFrame(animFollower);
-  })();
+    (function animFollower() {
+      fX += (mX - fX) * 0.12;
+      fY += (mY - fY) * 0.12;
+      follower.style.transform = 'translate(' + (fX - 13) + 'px,' + (fY - 13) + 'px)';
+      requestAnimationFrame(animFollower);
+    })();
+  }
 
   document.querySelectorAll('a, button, .project-card').forEach(function (el) {
     el.addEventListener('mouseenter', function () { follower.classList.add('grow'); });
