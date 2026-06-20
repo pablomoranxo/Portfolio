@@ -39,12 +39,12 @@
   var projects = ['sommer', 'nido', 'gofind', 'picara', 'mirtha', 'pablo'];
 
   var projectCovers = {
-    sommer: 'images/proyecto6-1.gif',
-    nido:   'images/proyecto3-1.jpg',
-    gofind: 'images/proyecto4-1.png',
-    picara: 'images/proyecto1-1.png',
-    mirtha: 'images/proyecto5-1.jpg',
-    pablo:  'images/proyecto2-1.png'
+    sommer: 'proyecto6-1.gif',
+    nido:   'proyecto3-1.jpg',
+    gofind: 'proyecto4-1.png',
+    picara: 'proyecto1-1.png',
+    mirtha: 'proyecto5-1.jpg',
+    pablo:  'proyecto2-1.png'
   };
 
   /* ══════════════════════════════════════════════
