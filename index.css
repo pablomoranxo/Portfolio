@@ -758,7 +758,12 @@ section {
 
   .section-title { font-size: clamp(36px, 10vw, 64px); }
 
-  #home { height: 100vh; min-height: unset; }
+  #home {
+    height: 100vh;
+    min-height: unset;
+    justify-content: flex-start;
+    padding-top: 43vh;
+  }
 
   /* Foto info: flujo normal debajo del texto, alineada derecha */
   .about-inner {
