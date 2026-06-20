@@ -197,7 +197,11 @@
   function openOverlay(which) {
     overlayOpen = which;
     document.documentElement.style.scrollSnapType = 'none';
-    document.body.style.overflow = 'hidden';
+    var sy = window.scrollY;
+    document.body.dataset.scrollY = sy;
+    document.body.style.position = 'fixed';
+    document.body.style.top = '-' + sy + 'px';
+    document.body.style.width = '100%';
     siteHeader.classList.add('over-overlay');
   }
 
@@ -209,8 +213,12 @@
     });
     closeLightbox();
     overlayOpen = null;
+    var sy = parseInt(document.body.dataset.scrollY || '0');
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    window.scrollTo(0, sy);
     document.documentElement.style.scrollSnapType = '';
-    document.body.style.overflow = '';
     siteHeader.classList.remove('over-overlay');
   }
 
@@ -222,8 +230,13 @@
     var label = textos[lang].relatedLabel;
     detailRelated.innerHTML =
       '<a class="related__more" href="#work">' + label + '</a>';
-    detailRelated.querySelector('.related__more').addEventListener('click', function () {
+    detailRelated.querySelector('.related__more').addEventListener('click', function (e) {
+      e.preventDefault();
       closeOverlay();
+      requestAnimationFrame(function () {
+        var work = document.getElementById('work');
+        if (work) work.scrollIntoView({ behavior: 'instant' });
+      });
     });
   }
 

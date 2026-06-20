@@ -773,6 +773,18 @@ section {
 
   .detail { flex-direction: column; gap: 20px; }
   .detail__info { width: auto; justify-content: flex-start; }
-  .detail__strip { min-height: 200px; }
+  .detail__strip {
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: visible;
+    height: auto;
+    min-height: unset;
+    gap: 8px;
+  }
+  .detail__strip img {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+  }
   #detail-related { padding: 0 20px; }
 }
