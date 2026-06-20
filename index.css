@@ -739,28 +739,24 @@ section {
 
   .section-title { font-size: clamp(36px, 10vw, 64px); }
 
-  /* Video landing: más pequeño, anclado arriba-izquierda */
-  #home {
-    height: 65vh;
-    min-height: unset;
-  }
-  .hero-bg-video {
-    width: auto;
-    height: 65vh;
-    top: 0;
-    left: 0;
-    right: unset;
-    bottom: unset;
-    object-position: left top;
-  }
+  /* Video: oculto en móvil (iOS no permite autoplay fiable) */
+  .hero-bg-video { display: none; }
+  #home { height: 100vh; min-height: unset; }
 
-  /* Foto info: abajo del todo, simétrica al espacio superior */
+  /* Foto info: flujo normal debajo del texto, alineada derecha */
+  .about-inner {
+    min-height: unset;
+    display: flex;
+    flex-direction: column;
+  }
   .about-photo {
+    position: relative;
     top: auto;
-    bottom: 0;
-    right: -4px;
-    width: clamp(120px, 38vw, 200px);
-    transform: none;
+    bottom: auto;
+    right: auto;
+    width: 55vw;
+    align-self: flex-end;
+    margin-top: 1.5em;
   }
 
 
