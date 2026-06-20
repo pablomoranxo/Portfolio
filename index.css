@@ -214,7 +214,7 @@ section {
   top: auto;
   left: auto;
   width: auto;
-  height: 60%;
+  height: 50vh;
   z-index: 0;
   pointer-events: none;
 }
