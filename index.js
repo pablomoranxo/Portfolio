@@ -467,15 +467,16 @@
      ══════════════════════════════════════════════ */
   applyLang('es');
 
-  /* Forzar autoplay en móvil (iOS ignora el atributo sin interacción) */
   var bgVideo = document.querySelector('.hero-bg-video');
-  if (bgVideo) {
-    bgVideo.muted = true;
-    bgVideo.play().catch(function () {});
-    document.addEventListener('touchstart', function tryPlay() {
-      bgVideo.play().catch(function () {});
-      document.removeEventListener('touchstart', tryPlay);
-    }, { once: true });
+  var bgGif   = document.querySelector('.hero-bg-gif');
+  var isIOS   = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  if (isIOS) {
+    if (bgVideo) bgVideo.style.display = 'none';
+    if (bgGif)   bgGif.style.display   = 'block';
+  } else {
+    if (bgGif) bgGif.style.display = 'none';
+    if (bgVideo) { bgVideo.muted = true; bgVideo.play().catch(function () {}); }
   }
 
 })();
