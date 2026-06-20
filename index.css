@@ -745,8 +745,6 @@ section {
 
   .section-title { font-size: clamp(36px, 10vw, 64px); }
 
-  /* Video: oculto en móvil (iOS no permite autoplay fiable) */
-  .hero-bg-video { display: none; }
   #home { height: 100vh; min-height: unset; }
 
   /* Foto info: flujo normal debajo del texto, alineada derecha */
