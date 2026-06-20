@@ -542,6 +542,10 @@ section {
 
 #cursor-follower.grow { width: 44px; height: 44px; }
 
+@media (hover: none) {
+  #cursor-follower { display: none; }
+}
+
 /* ============================================
    OVERLAY — Detalle de proyecto
    ============================================ */
