@@ -739,10 +739,27 @@ section {
 
   .section-title { font-size: clamp(36px, 10vw, 64px); }
 
+  /* Video landing: más pequeño, anclado arriba-izquierda */
+  #home {
+    height: 65vh;
+    min-height: unset;
+  }
+  .hero-bg-video {
+    width: auto;
+    height: 65vh;
+    top: 0;
+    left: 0;
+    right: unset;
+    bottom: unset;
+    object-position: left top;
+  }
+
+  /* Foto info: abajo del todo, simétrica al espacio superior */
   .about-photo {
-    top: 20%;
+    top: auto;
+    bottom: 0;
     right: -4px;
-    width: clamp(100px, 32vw, 170px);
+    width: clamp(120px, 38vw, 200px);
     transform: none;
   }
 

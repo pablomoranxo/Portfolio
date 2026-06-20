@@ -450,4 +450,15 @@
      ══════════════════════════════════════════════ */
   applyLang('es');
 
+  /* Forzar autoplay en móvil (iOS ignora el atributo sin interacción) */
+  var bgVideo = document.querySelector('.hero-bg-video');
+  if (bgVideo) {
+    bgVideo.muted = true;
+    bgVideo.play().catch(function () {});
+    document.addEventListener('touchstart', function tryPlay() {
+      bgVideo.play().catch(function () {});
+      document.removeEventListener('touchstart', tryPlay);
+    }, { once: true });
+  }
+
 })();
