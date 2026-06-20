@@ -365,8 +365,10 @@ section {
   align-self: flex-start;
 }
 
-.project-grid:hover .project-card       { opacity: 0.45; }
-.project-grid:hover .project-card:hover { opacity: 1; }
+@media (hover: hover) {
+  .project-grid:hover .project-card       { opacity: 0.45; }
+  .project-grid:hover .project-card:hover { opacity: 1; }
+}
 
 .project-card__cover {
   width: 100%;
