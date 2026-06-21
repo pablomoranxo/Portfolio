@@ -425,15 +425,21 @@ section {
 
 .project-card:hover .project-card__cover img { transform: scale(1.04); }
 
-/* Pícara — proporciones naturales, recorte suave de bordes */
-.project-card--crop .project-card__cover { overflow: hidden; }
+/* Pícara — imagen completa con fondo del sitio */
+.project-card--crop .project-card__cover {
+  overflow: hidden;
+  background: var(--bg);
+  padding: 10px;
+}
 .project-card--crop .project-card__cover img {
-  transform: scale(1.18);
-  transform-origin: center center;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  transform: none;
   transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .project-card--crop:hover .project-card__cover img {
-  transform: scale(1.22);
+  transform: scale(1.03);
 }
 
 /* Sommer — cuadrado con fondo negro, imagen contenida */
@@ -846,6 +852,10 @@ section {
 
 
   .project-card { width: calc((100vw - var(--pad-x) * 2 - 20px) / 1.1); }
+
+  /* Landing: nav alineado a la derecha en móvil */
+  .home-block { width: 100%; }
+  .home-nav { justify-content: flex-end; }
 
   #view-detail {
     padding: calc(var(--header-h) + 20px) 20px 80px;

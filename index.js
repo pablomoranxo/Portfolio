@@ -229,7 +229,7 @@
     if (!detailRelated) return;
     var label = textos[lang].relatedLabel;
     detailRelated.innerHTML =
-      '<a class="related__more" href="#work">' + label + '</a>';
+      '<a class="related__more" href="#work">‹ ' + label + '</a>';
     detailRelated.querySelector('.related__more').addEventListener('click', function (e) {
       e.preventDefault();
       closeOverlay();
