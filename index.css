@@ -120,7 +120,6 @@ button { cursor: pointer; font-family: var(--font); }
 .header-nav {
   display: flex;
   gap: 2em;
-  padding-right: var(--pad-x);
 }
 
 .header-nav-link {
