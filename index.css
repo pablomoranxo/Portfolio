@@ -225,6 +225,18 @@ section {
   pointer-events: none;
 }
 
+.hero-bg-gif.desktop-fallback {
+  top: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  height: 100vh !important;
+  max-width: 100% !important;
+  object-fit: cover !important;
+  object-position: right bottom !important;
+}
+
 .home-block {
   display: flex;
   flex-direction: column;

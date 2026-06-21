@@ -485,7 +485,13 @@
     if (bgGif) bgGif.style.display = 'none';
     if (bgVideo) {
       bgVideo.muted = true;
-      bgVideo.play().catch(function () {});
+      bgVideo.play().catch(function () {
+        bgVideo.style.display = 'none';
+        if (bgGif) {
+          bgGif.classList.add('desktop-fallback');
+          bgGif.style.display = 'block';
+        }
+      });
       document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'visible') bgVideo.play().catch(function () {});
       });
