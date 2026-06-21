@@ -40,7 +40,7 @@
 
   var projectCovers = {
     sommer: 'proyecto6-1.gif',
-    nido:   'proyecto3-1.jpg',
+    nido:   'proyecto3-14.jpg',
     gofind: 'proyecto4-1.png',
     picara: 'proyecto1-1.png',
     mirtha: 'proyecto5-1.jpg',
@@ -483,7 +483,13 @@
     if (bgGif)   bgGif.style.display   = 'block';
   } else {
     if (bgGif) bgGif.style.display = 'none';
-    if (bgVideo) { bgVideo.muted = true; bgVideo.play().catch(function () {}); }
+    if (bgVideo) {
+      bgVideo.muted = true;
+      bgVideo.play().catch(function () {});
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') bgVideo.play().catch(function () {});
+      });
+    }
   }
 
 })();
