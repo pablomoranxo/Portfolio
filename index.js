@@ -467,6 +467,13 @@
      ══════════════════════════════════════════════ */
   applyLang('es');
 
+  /* Viewport real — evita inconsistencias entre Chrome y Safari en móvil */
+  function setRealVH() {
+    document.documentElement.style.setProperty('--real-vh', (window.innerHeight * 0.01) + 'px');
+  }
+  setRealVH();
+  window.addEventListener('resize', setRealVH);
+
   var bgVideo = document.querySelector('.hero-bg-video');
   var bgGif   = document.querySelector('.hero-bg-gif');
   var isIOS   = /iPad|iPhone|iPod/.test(navigator.userAgent);

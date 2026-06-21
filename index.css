@@ -760,10 +760,10 @@ section {
   .section-title { font-size: clamp(36px, 10vw, 64px); }
 
   #home {
-    height: 100svh;
+    height: calc(var(--real-vh, 1svh) * 100);
     min-height: unset;
     justify-content: flex-start;
-    padding-top: 38svh;
+    padding-top: calc(var(--real-vh, 1svh) * 40);
   }
 
   /* Foto info: flujo normal debajo del texto, alineada derecha */
