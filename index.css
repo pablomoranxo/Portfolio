@@ -215,6 +215,7 @@ section {
   left: auto;
   width: auto;
   height: 50vh;
+  max-width: none;
   z-index: 0;
   pointer-events: none;
 }
@@ -762,7 +763,7 @@ section {
     height: 100vh;
     min-height: unset;
     justify-content: flex-start;
-    padding-top: 38vh;
+    padding-top: 78vh;
   }
 
   /* Foto info: flujo normal debajo del texto, alineada derecha */
