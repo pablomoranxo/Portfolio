@@ -649,12 +649,17 @@ section {
   font-size: 13px;
   line-height: 1.65;
   margin-top: 8px;
-  color: var(--muted-strong);
+  color: var(--fg);
   letter-spacing: -0.025em;
 }
 
 .detail__process {
   margin-top: 20px;
+}
+.detail__process-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 .detail__process-label {
   font-size: 12px;
@@ -673,8 +678,12 @@ section {
 .detail__process-img {
   width: 100%;
   height: auto;
+  max-height: 160px;
+  object-fit: contain;
+  object-position: left top;
   display: block;
   margin-bottom: 8px;
+  cursor: pointer;
 }
 
 .detail__strip {

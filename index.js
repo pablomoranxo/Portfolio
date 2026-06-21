@@ -313,6 +313,14 @@
     openLightbox(allImgs.map(function (i) { return i.src; }), allImgs.indexOf(img));
   });
 
+  viewDetail.addEventListener('click', function (e) {
+    var img = e.target.closest('.detail__process-img');
+    if (!img) return;
+    var process = img.closest('.detail__process');
+    var allImgs = Array.prototype.slice.call(process.querySelectorAll('.detail__process-img'));
+    openLightbox(allImgs.map(function (i) { return i.src; }), allImgs.indexOf(img));
+  });
+
   if (lbClose) lbClose.addEventListener('click', closeLightbox);
   lightbox.addEventListener('click', function (e) { if (e.target === lightbox) closeLightbox(); });
 
