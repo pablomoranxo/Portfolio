@@ -338,6 +338,10 @@ section {
     transform: none;
     transition: none;
   }
+  .detail__process-body,
+  .detail__process-chevron {
+    transition: none;
+  }
 }
 
 /* ============================================
@@ -684,12 +688,39 @@ section {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
-.detail__process-label {
+.detail__process-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-bottom: 6px;
   font-size: 12px;
-  text-transform: lowercase;
+  font-weight: 300;
   color: var(--muted-strong);
   letter-spacing: -0.02em;
-  margin-bottom: 6px;
+  line-height: 1;
+}
+.detail__process-toggle:focus-visible {
+  outline: 1px solid var(--muted-strong);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.detail__process-chevron {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+.detail__process-toggle[aria-expanded="true"] .detail__process-chevron {
+  transform: rotate(180deg);
+}
+.detail__process-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.detail__process-body.is-open {
+  max-height: 2000px;
 }
 .detail__process-text {
   font-size: 13px;
@@ -896,40 +927,6 @@ section {
   #detail-sommer .detail__strip img:first-child {
     width: 60%;
     margin: 0 auto;
-  }
-
-  /* Proceso: acordeón colapsable en móvil */
-  .detail__process-label {
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    margin-bottom: 0;
-    user-select: none;
-  }
-  .detail__process-label::after {
-    content: '+';
-    font-size: 14px;
-    color: var(--muted-strong);
-  }
-  .detail__process.is-open .detail__process-label::after {
-    content: '−';
-  }
-  .detail__process-text,
-  .detail__process-grid,
-  .detail__process-img {
-    display: none;
-  }
-  .detail__process.is-open .detail__process-text {
-    display: block;
-    margin-top: 8px;
-  }
-  .detail__process.is-open .detail__process-grid {
-    display: grid;
-  }
-  .detail__process.is-open .detail__process-img {
-    display: block;
   }
 
   /* Lightbox: mayor área táctil en cerrar */

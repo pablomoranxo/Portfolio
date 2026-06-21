@@ -314,20 +314,31 @@
   });
 
   viewDetail.addEventListener('click', function (e) {
-    var label = e.target.closest('.detail__process-label');
-    if (label && window.innerWidth <= 768) {
-      label.closest('.detail__process').classList.toggle('is-open');
-      return;
-    }
-  });
-
-  viewDetail.addEventListener('click', function (e) {
     var img = e.target.closest('.detail__process-img');
     if (!img) return;
     var process = img.closest('.detail__process');
     var allImgs = Array.prototype.slice.call(process.querySelectorAll('.detail__process-img'));
     openLightbox(allImgs.map(function (i) { return i.src; }), allImgs.indexOf(img));
   });
+
+  /* ══════════════════════════════════════════════
+     PROCESO — accordion universal
+     ══════════════════════════════════════════════ */
+  (function () {
+    document.querySelectorAll('.detail__process-toggle').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var expanded = btn.getAttribute('aria-expanded') === 'true';
+        var body = document.getElementById(btn.getAttribute('aria-controls'));
+        if (!expanded) {
+          btn.setAttribute('aria-expanded', 'true');
+          if (body) body.classList.add('is-open');
+        } else {
+          btn.setAttribute('aria-expanded', 'false');
+          if (body) body.classList.remove('is-open');
+        }
+      });
+    });
+  }());
 
   if (lbClose) lbClose.addEventListener('click', closeLightbox);
   lightbox.addEventListener('click', function (e) { if (e.target === lightbox) closeLightbox(); });
