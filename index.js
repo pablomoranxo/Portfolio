@@ -482,16 +482,21 @@
     if (bgVideo) bgVideo.style.display = 'none';
     if (bgGif)   bgGif.style.display   = 'block';
   } else {
-    if (bgGif) bgGif.style.display = 'none';
+    if (bgGif) {
+      bgGif.classList.add('desktop-fallback');
+      bgGif.style.display = 'block';
+    }
     if (bgVideo) {
+      bgVideo.style.display = 'none';
       bgVideo.muted = true;
-      bgVideo.play().catch(function () {
-        bgVideo.style.display = 'none';
+      bgVideo.play().catch(function () {});
+      bgVideo.addEventListener('playing', function () {
+        bgVideo.style.display = 'block';
         if (bgGif) {
-          bgGif.classList.add('desktop-fallback');
-          bgGif.style.display = 'block';
+          bgGif.style.display = 'none';
+          bgGif.classList.remove('desktop-fallback');
         }
-      });
+      }, { once: true });
       document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'visible') bgVideo.play().catch(function () {});
       });
