@@ -120,7 +120,7 @@ button { cursor: pointer; font-family: var(--font); }
 .header-nav {
   display: flex;
   gap: 2em;
-  padding-right: 48px;
+  padding-right: var(--pad-x);
 }
 
 .header-nav-link {
@@ -853,9 +853,6 @@ section {
 
   .project-card { width: calc((100vw - var(--pad-x) * 2 - 20px) / 1.1); }
 
-  /* Landing: nav alineado a la derecha en móvil */
-  .home-block { width: 100%; }
-  .home-nav { justify-content: flex-end; }
 
   #view-detail {
     padding: calc(var(--header-h) + 20px) 20px 80px;
