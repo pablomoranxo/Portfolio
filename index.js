@@ -519,4 +519,26 @@
     }
   }
 
+  var contactVideo = document.querySelector('.contact-bg-video');
+  var contactGif   = document.querySelector('.contact-bg-gif');
+
+  if (isIOS) {
+    if (contactVideo) contactVideo.style.display = 'none';
+    if (contactGif)   contactGif.style.display   = 'block';
+  } else {
+    if (contactGif) contactGif.style.display = 'none';
+    if (contactVideo) {
+      contactVideo.style.display = 'none';
+      contactVideo.muted = true;
+      contactVideo.play().catch(function () {});
+      contactVideo.addEventListener('playing', function () {
+        contactVideo.style.display = 'block';
+        if (contactGif) contactGif.style.display = 'none';
+      }, { once: true });
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') contactVideo.play().catch(function () {});
+      });
+    }
+  }
+
 })();
