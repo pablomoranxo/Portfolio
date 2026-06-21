@@ -893,6 +893,11 @@ section {
   }
   #detail-related { padding: 0 20px; }
 
+  #detail-sommer .detail__strip img:first-child {
+    width: 72%;
+    margin: 0 auto;
+  }
+
   /* Proceso: acordeón colapsable en móvil */
   .detail__process-label {
     cursor: pointer;
