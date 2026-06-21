@@ -819,7 +819,7 @@ section {
   :root { --pad-x: 24px; }
 
   #siteHeader { padding: 0 24px; }
-  .header-nav { gap: 1.2em; padding-right: 36px; }
+  .header-nav { gap: 1.2em; }
 
   .section-title { font-size: clamp(36px, 10vw, 64px); }
 
