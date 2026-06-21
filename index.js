@@ -314,6 +314,14 @@
   });
 
   viewDetail.addEventListener('click', function (e) {
+    var label = e.target.closest('.detail__process-label');
+    if (label && window.innerWidth <= 768) {
+      label.closest('.detail__process').classList.toggle('is-open');
+      return;
+    }
+  });
+
+  viewDetail.addEventListener('click', function (e) {
     var img = e.target.closest('.detail__process-img');
     if (!img) return;
     var process = img.closest('.detail__process');

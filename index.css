@@ -868,4 +868,45 @@ section {
     max-width: 100%;
   }
   #detail-related { padding: 0 20px; }
+
+  /* Proceso: acordeón colapsable en móvil */
+  .detail__process-label {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    margin-bottom: 0;
+    user-select: none;
+  }
+  .detail__process-label::after {
+    content: '+';
+    font-size: 14px;
+    color: var(--muted-strong);
+  }
+  .detail__process.is-open .detail__process-label::after {
+    content: '−';
+  }
+  .detail__process-text,
+  .detail__process-grid,
+  .detail__process-img {
+    display: none;
+  }
+  .detail__process.is-open .detail__process-text {
+    display: block;
+    margin-top: 8px;
+  }
+  .detail__process.is-open .detail__process-grid {
+    display: grid;
+  }
+  .detail__process.is-open .detail__process-img {
+    display: block;
+  }
+
+  /* Lightbox: mayor área táctil en cerrar */
+  #lbClose {
+    top: 8px; right: 8px;
+    padding: 16px;
+    font-size: 28px;
+  }
 }
