@@ -843,7 +843,7 @@ section {
   .about-photo {
     grid-column: 1;
     grid-row: auto;
-    width: 55vw;
+    width: 42vw;
     align-self: flex-end;
     justify-self: end;
     margin-top: 1.5em;
