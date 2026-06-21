@@ -213,9 +213,9 @@ section {
   bottom: 0;
   top: auto;
   left: auto;
-  width: auto;
-  height: 50vh;
-  max-width: none;
+  width: auto !important;
+  height: 50svh !important;
+  max-width: none !important;
   z-index: 0;
   pointer-events: none;
 }
@@ -760,10 +760,10 @@ section {
   .section-title { font-size: clamp(36px, 10vw, 64px); }
 
   #home {
-    height: 100vh;
+    height: 100svh;
     min-height: unset;
     justify-content: flex-start;
-    padding-top: 35vh;
+    padding-top: 38svh;
   }
 
   /* Foto info: flujo normal debajo del texto, alineada derecha */
