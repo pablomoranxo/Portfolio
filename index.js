@@ -526,7 +526,7 @@
     if (contactVideo) contactVideo.style.display = 'none';
     if (contactGif)   contactGif.style.display   = 'block';
   } else {
-    if (contactGif) contactGif.style.display = 'none';
+    if (contactGif) contactGif.style.display = 'block';
     if (contactVideo) {
       contactVideo.style.display = 'none';
       contactVideo.muted = true;
