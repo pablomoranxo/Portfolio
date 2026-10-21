@@ -209,6 +209,10 @@
     document.body.style.top = '-' + sy + 'px';
     document.body.style.width = '100%';
     siteHeader.classList.add('over-overlay');
+    /* Dentro de un proyecto, el menú marca "work" */
+    headerNavLinks.forEach(function (link) {
+      link.classList.toggle('active', link.getAttribute('href') === '#work');
+    });
   }
 
   function closeOverlay() {
@@ -251,6 +255,35 @@
   }
 
   /* ══════════════════════════════════════════════
+     GALERÍA — última fila
+     Se estira a todo el ancho solo si así no queda demasiado alta
+     (p. ej. Pablo I o Mirtha sí; dos pantallas de móvil sueltas no).
+     ══════════════════════════════════════════════ */
+  function fitGallery(gallery) {
+    if (!gallery || !gallery.offsetParent) return;
+    gallery.classList.remove('is-filled');
+    var items = Array.prototype.slice.call(gallery.querySelectorAll('.gallery__item'));
+    if (!items.length) return;
+    var lastTop = items[items.length - 1].offsetTop;
+    var lastRow = items.filter(function (it) { return it.offsetTop === lastTop; });
+    var sumR = lastRow.reduce(function (a, it) {
+      return a + (parseFloat(it.style.getPropertyValue('--r')) || 1);
+    }, 0);
+    var gap = parseFloat(getComputedStyle(gallery).columnGap) || 0;
+    var h = (gallery.clientWidth - gap * (lastRow.length - 1)) / sumR;
+    if (h <= window.innerHeight * 0.75) gallery.classList.add('is-filled');
+  }
+
+  var fitT;
+  window.addEventListener('resize', function () {
+    clearTimeout(fitT);
+    fitT = setTimeout(function () {
+      var open = viewDetail.querySelector('.detail--gallery[style*="flex"] .detail__gallery');
+      if (open) fitGallery(open);
+    }, 150);
+  });
+
+  /* ══════════════════════════════════════════════
      MOSTRAR PROYECTO
      ══════════════════════════════════════════════ */
   function showProject(id) {
@@ -264,6 +297,7 @@
     viewDetail.classList.toggle('is-gallery', panel.classList.contains('detail--gallery'));
     viewDetail.scrollTop = 0;
     openOverlay('detail');
+    fitGallery(panel.querySelector('.detail__gallery'));
 
     var idx = projects.indexOf(id);
     if (detailCounter) detailCounter.textContent = (idx + 1) + ' / ' + projects.length;
@@ -351,6 +385,12 @@
     var process = img.closest('.detail__process');
     var allImgs = Array.prototype.slice.call(process.querySelectorAll('.detail__process-img'));
     openLightbox(allImgs.map(function (i) { return i.src; }), allImgs.indexOf(img));
+  });
+
+  /* "Ideación" sin contenido (ni texto ni imágenes): no mostrar el desplegable */
+  document.querySelectorAll('.detail__process').forEach(function (proc) {
+    var body = proc.querySelector('.detail__process-body');
+    if (body && !body.textContent.trim() && !body.querySelector('img')) proc.hidden = true;
   });
 
   /* ══════════════════════════════════════════════
