@@ -184,6 +184,16 @@ section {
   overflow: hidden;
 }
 
+/* Vídeos de fondo: sin controles ni botón de play de Safari */
+.bg-video::-webkit-media-controls,
+.bg-video::-webkit-media-controls-panel,
+.bg-video::-webkit-media-controls-overlay-play-button,
+.bg-video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+  opacity: 0 !important;
+}
+
 .contact-bg-video,
 .contact-bg-gif {
   position: absolute;
@@ -438,12 +448,22 @@ section {
 .project-grid-wrap.is-dragging .project-card { cursor: grabbing; }
 
 /* Flechas anterior / siguiente */
+/* En la misma fila que el título "work", a la derecha */
+#work .section-title { grid-column: 1 / 9; grid-row: 1; }
+
 .project-nav {
-  grid-column: 1 / -1;
+  grid-column: 9 / -1;
+  grid-row: 1;
+  align-self: end;
   display: flex;
   justify-content: flex-end;
   gap: 0.3em;
-  margin-top: 24px;
+  margin-bottom: clamp(29px, 4.2vw, 58px);   /* = margen inferior del título */
+}
+
+@media (max-width: 768px) {
+  #work .section-title { grid-column: 1; }
+  .project-nav { grid-column: 1; grid-row: auto; margin-bottom: 16px; }
 }
 
 .project-nav__btn {
