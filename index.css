@@ -445,6 +445,12 @@ section {
 @media (hover: hover) {
   .project-grid:hover .project-card       { opacity: 0.45; }
   .project-grid:hover .project-card:hover { opacity: 1; }
+  /* Proyecto del punto activo: destacado siempre (el hover manda mientras dura) */
+  .project-grid.has-current:not(:hover) .project-card:not(.is-current) { opacity: 0.45; }
+}
+
+@media (hover: none) {
+  .project-grid.has-current .project-card:not(.is-current) { opacity: 0.45; }
 }
 
 /* Arrastrar con ratón (sin trackpad) */

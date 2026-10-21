@@ -576,14 +576,18 @@
       return ((i % n) + n) % n;
     }
 
+    /* Todas las tarjetas (originales + copias del bucle): la j-ésima es el proyecto j % n */
+    var allCards = Array.prototype.slice.call(grid.querySelectorAll('.project-card'));
+
     var activeDot = -1;
     function updateDots() {
-      if (!dots.length) return;
       var i = currentIndex(anim ? anim.to : wrap.scrollLeft);
       if (i === activeDot) return;
       if (dots[activeDot]) { dots[activeDot].classList.remove('is-active'); dots[activeDot].removeAttribute('aria-current'); }
-      dots[i].classList.add('is-active');
-      dots[i].setAttribute('aria-current', 'true');
+      if (dots[i]) { dots[i].classList.add('is-active'); dots[i].setAttribute('aria-current', 'true'); }
+      /* Destacar el proyecto correspondiente al punto activo */
+      allCards.forEach(function (c, j) { c.classList.toggle('is-current', j % n === i); });
+      grid.classList.add('has-current');
       activeDot = i;
     }
 
