@@ -6,7 +6,6 @@
   --text:         #0a0a0a;
   --muted:        rgba(10, 10, 10, 0.38);
   --muted-strong: #666666;
-  --border:       var(--border);
   --font:         'Inter', system-ui, -apple-system, sans-serif;
   --header-h:     60px;
   --pad-x:        clamp(48px, 6vw, 96px);
@@ -169,6 +168,13 @@ section {
   justify-content: flex-start;
   padding-top: 100px;
   padding-bottom: 100px;
+}
+
+/* En pantallas bajas el carrusel no cabía y la sección quedaba más alta
+   que la ventana (scroll a saltos). En pantallas normales queda igual. */
+#work {
+  padding-top: clamp(64px, 11vh, 100px);
+  padding-bottom: clamp(24px, 5vh, 60px);
 }
 
 #about .section-content {
@@ -447,45 +453,44 @@ section {
 .project-grid-wrap.is-dragging,
 .project-grid-wrap.is-dragging .project-card { cursor: grabbing; }
 
-/* Flechas anterior / siguiente — flotando sobre los proyectos,
-   a media pantalla, una en cada extremo */
-#work { position: relative; }
-
-.project-nav__btn {
-  position: absolute;
-  top: 50vh;                       /* la sección encaja arriba: = mitad de pantalla */
-  transform: translateY(-50%);
-  z-index: 5;
-  width: 48px;
-  height: 48px;
+/* Puntos de navegación (uno por proyecto; el activo se alarga) */
+.project-dots {
+  grid-column: 1 / -1;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  gap: 2px;
+  margin-top: 28px;
+}
+
+.project-dot {
+  display: block;
+  width: 22px;                /* área de clic cómoda */
+  height: 22px;
+  padding: 0;
   border: none;
-  border-radius: 50%;
-  background: var(--bg);
-  color: var(--text);
-  font-size: 20px;
-  font-weight: 300;
-  line-height: 1;
-  box-shadow: 0 1px 8px rgba(10, 10, 10, 0.08);
-  transition: background 0.15s ease, color 0.15s ease;
+  background: none;
+  position: relative;
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.project-nav__btn--prev { left:  max(8px, calc(var(--pad-x) / 2 - 24px)); }
-.project-nav__btn--next { right: max(8px, calc(var(--pad-x) / 2 - 24px)); }
-
-.project-nav__btn:hover,
-.project-nav__btn:focus-visible {
+.project-dot::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
   background: var(--text);
-  color: var(--bg);
-  outline: none;
+  opacity: 0.2;
+  transform: translate(-50%, -50%);
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
 }
 
-/* En táctil se desliza con el dedo: sin flechas */
-@media (hover: none) {
-  .project-nav__btn { display: none; }
-}
+.project-dot:hover::before          { opacity: 0.5; }
+.project-dot.is-active              { width: 34px; }
+.project-dot.is-active::before      { width: 22px; opacity: 1; }
+.project-dot:focus-visible          { outline: 1px solid var(--muted); outline-offset: -4px; border-radius: 4px; }
 
 .project-card__cover {
   width: 100%;
@@ -630,7 +635,6 @@ section {
   opacity: 0;
   transform: scale(0.96) translateY(8px);
   transition: opacity 0.2s ease, transform 0.2s ease;
-  will-change: left, top;
   border-radius: 2px;
   overflow: hidden;
 }
@@ -732,7 +736,7 @@ section {
   font-size: 13px;
   line-height: 1.65;
   margin-top: 8px;
-  color: var(--fg);
+  color: var(--text);
   letter-spacing: -0.025em;
 }
 
@@ -827,7 +831,6 @@ section {
   display: flex;
   align-items: center;
   gap: 16px;
-  border-top: 1px solid var(--border);
   background: var(--bg);
   z-index: 10;
 }

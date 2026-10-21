@@ -73,8 +73,8 @@
   var lbPrev        = document.getElementById('lbPrev');
   var lbNext        = document.getElementById('lbNext');
 
-  var preview       = document.getElementById('work-preview');
-  var previewImg    = document.getElementById('work-preview-img');
+  var detailPrev    = document.getElementById('detailPrev');   /* no existen en el HTML: quedan en null */
+  var detailNext    = document.getElementById('detailNext');
 
   var landingNavItems = document.querySelectorAll('.landing-nav-item');
   var headerNavLinks  = document.querySelectorAll('.header-nav-link:not(.header-lang)');
@@ -91,21 +91,27 @@
   var fX = 0, fY = 0, mX = 0, mY = 0, fVisible = false;
 
   if (!isTouchDevice) {
+    var fRaf = 0;
+
+    /* Solo se anima mientras el círculo no ha alcanzado al cursor;
+       antes corría en bucle 60 veces por segundo aunque no se moviera nada. */
+    function animFollower() {
+      fX += (mX - fX) * 0.12;
+      fY += (mY - fY) * 0.12;
+      if (Math.abs(mX - fX) < 0.1 && Math.abs(mY - fY) < 0.1) { fX = mX; fY = mY; }
+      follower.style.transform = 'translate3d(' + (fX - 13) + 'px,' + (fY - 13) + 'px,0)';
+      fRaf = (fX !== mX || fY !== mY) ? requestAnimationFrame(animFollower) : 0;
+    }
+
     document.addEventListener('mousemove', function (e) {
       mX = e.clientX;
       mY = e.clientY;
       if (!fVisible) { fX = mX; fY = mY; follower.style.opacity = '1'; fVisible = true; }
-    });
+      if (!fRaf) fRaf = requestAnimationFrame(animFollower);
+    }, { passive: true });
     document.addEventListener('mouseleave', function () {
       follower.style.opacity = '0'; fVisible = false;
     });
-
-    (function animFollower() {
-      fX += (mX - fX) * 0.12;
-      fY += (mY - fY) * 0.12;
-      follower.style.transform = 'translate(' + (fX - 13) + 'px,' + (fY - 13) + 'px)';
-      requestAnimationFrame(animFollower);
-    })();
   }
 
   document.querySelectorAll('a, button, .project-card').forEach(function (el) {
@@ -158,7 +164,7 @@
           }
         });
       });
-    }, { threshold: 0.5 });
+    }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
 
     sections.forEach(function (s) { sectionObs.observe(s); });
   }
@@ -217,8 +223,12 @@
     document.body.style.position = '';
     document.body.style.top = '';
     document.body.style.width = '';
-    window.scrollTo(0, sy);
-    document.documentElement.style.scrollSnapType = '';
+    /* html tiene scroll-behavior: smooth → sin 'instant' la página se
+       deslizaba desde arriba del todo hasta work al cerrar un proyecto */
+    window.scrollTo({ top: sy, left: 0, behavior: 'instant' });
+    requestAnimationFrame(function () {
+      document.documentElement.style.scrollSnapType = '';
+    });
     siteHeader.classList.remove('over-overlay');
   }
 
@@ -383,21 +393,6 @@
   });
 
   /* ══════════════════════════════════════════════
-     HOVER PREVIEW
-     ══════════════════════════════════════════════ */
-  var pvX = 0, pvY = 0, pvTX = 0, pvTY = 0, pvRaf = null;
-
-  function animPreview() {
-    pvX += (pvTX - pvX) * 0.1;
-    pvY += (pvTY - pvY) * 0.1;
-    preview.style.left = pvX + 'px';
-    preview.style.top  = pvY + 'px';
-    pvRaf = requestAnimationFrame(animPreview);
-  }
-
-  /* hover preview eliminado — las cartas ya muestran la imagen */
-
-  /* ══════════════════════════════════════════════
      LANG TOGGLE
      ══════════════════════════════════════════════ */
   function toggleLang() { applyLang(lang === 'es' ? 'en' : 'es'); }
@@ -462,33 +457,34 @@
 
     var setW = 0;
     var originStart = 0;
+    var touchActive = false;   /* dedo sobre el carrusel (móvil/tablet) */
 
     function measure() {
       var all = grid.querySelectorAll('.project-card');
       if (all.length < n * 2 + 1) return;
+      /* posición relativa actual, para conservarla al re-medir */
+      var rel = setW ? (wrap.scrollLeft - originStart) / setW : 0;
       var r0 = all[0].getBoundingClientRect();
       var rN = all[n].getBoundingClientRect();
       var r2N = all[n * 2].getBoundingClientRect();
       setW = Math.round(r2N.left - rN.left);
       originStart = Math.round(rN.left - r0.left);
-      wrap.scrollLeft = originStart;
+      wrap.scrollLeft = originStart + rel * setW;
     }
 
     requestAnimationFrame(function () {
-      requestAnimationFrame(measure);
+      requestAnimationFrame(function () { measure(); updateDots(); });
     });
 
-    wrap.addEventListener('scroll', function () {
-      if (!setW) return;
-      var sl = wrap.scrollLeft;
-      if (sl < originStart - 3) {
-        wrap.scrollLeft = sl + setW;
-      } else if (sl >= originStart + setW - 3) {
-        wrap.scrollLeft = sl - setW;
-      }
-    }, { passive: true });
-
-    /* ── Navegación sin trackpad: flechas + arrastrar con ratón ── */
+    /* Al cambiar el ancho (girar la tablet, redimensionar ventana) las
+       tarjetas cambian de tamaño: hay que volver a medir el bucle. */
+    var lastW = window.innerWidth, resizeT;
+    window.addEventListener('resize', function () {
+      if (window.innerWidth === lastW) return;   /* barra del navegador móvil: ignorar */
+      lastW = window.innerWidth;
+      clearTimeout(resizeT);
+      resizeT = setTimeout(function () { anim = null; measure(); updateDots(); }, 120);
+    });
 
     /* Lleva una posición "virtual" al tramo de originales (bucle) */
     function loopPos(x) {
@@ -497,6 +493,37 @@
       while (x >= originStart + setW) x -= setW;
       return x;
     }
+
+    /* Corrección del bucle. Con el dedo se espera a que el deslizamiento
+       termine (si no, iOS corta la inercia y el swipe va a tirones);
+       hay una copia completa a cada lado, así que hay margen de sobra. */
+    var fixT;
+    function fixLoop() {
+      if (!setW) return;
+      var sl = wrap.scrollLeft;
+      if (sl < originStart - 3 || sl >= originStart + setW - 3) wrap.scrollLeft = loopPos(sl);
+    }
+
+    var dotsRaf = 0;
+    wrap.addEventListener('scroll', function () {
+      if (!setW) return;
+      var sl = wrap.scrollLeft;
+      var nearEdge = sl < setW * 0.25 || sl > wrap.scrollWidth - wrap.clientWidth - setW * 0.25;
+      if (anim || drag || nearEdge) {
+        fixLoop();
+      } else {
+        clearTimeout(fixT);
+        fixT = setTimeout(function () { if (!touchActive) fixLoop(); }, 140);
+      }
+      if (!dotsRaf) dotsRaf = requestAnimationFrame(function () { dotsRaf = 0; updateDots(); });
+    }, { passive: true });
+
+    wrap.addEventListener('touchstart', function () { touchActive = true; }, { passive: true });
+    wrap.addEventListener('touchend', function () {
+      touchActive = false;
+      clearTimeout(fixT);
+      fixT = setTimeout(fixLoop, 400);
+    }, { passive: true });
 
     function stepW() {
       var card = grid.querySelector('.project-card');
@@ -525,14 +552,53 @@
       if (!rafId) rafId = requestAnimationFrame(tick);
     }
 
-    function go(dir) { moveBy(stepW() * dir, 550); }
+    /* ── Puntos de navegación ── */
+    var dotsWrap = document.getElementById('projectDots');
+    var dots = [];
+    if (dotsWrap) {
+      originals.forEach(function (card, i) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'project-dot';
+        var t = card.querySelector('.project-card__title');
+        b.setAttribute('aria-label', t ? t.textContent : 'Proyecto ' + (i + 1));
+        b.addEventListener('click', function () { goTo(i); });
+        b.addEventListener('mouseenter', function () { follower.classList.add('grow'); });
+        b.addEventListener('mouseleave', function () { follower.classList.remove('grow'); });
+        dotsWrap.appendChild(b);
+        dots.push(b);
+      });
+    }
 
-    var btnPrev = document.getElementById('workPrev');
-    var btnNext = document.getElementById('workNext');
-    if (btnPrev) btnPrev.addEventListener('click', function () { go(-1); });
-    if (btnNext) btnNext.addEventListener('click', function () { go(1); });
+    function currentIndex(pos) {
+      if (!setW) return 0;
+      var i = Math.round((loopPos(pos) - originStart) / stepW());
+      return ((i % n) + n) % n;
+    }
 
-    /* Arrastrar con el ratón (en táctil ya funciona el swipe nativo) */
+    var activeDot = -1;
+    function updateDots() {
+      if (!dots.length) return;
+      var i = currentIndex(anim ? anim.to : wrap.scrollLeft);
+      if (i === activeDot) return;
+      if (dots[activeDot]) { dots[activeDot].classList.remove('is-active'); dots[activeDot].removeAttribute('aria-current'); }
+      dots[i].classList.add('is-active');
+      dots[i].setAttribute('aria-current', 'true');
+      activeDot = i;
+    }
+
+    /* Ir al proyecto i por el camino más corto del bucle */
+    function goTo(i) {
+      var from = anim ? anim.to : wrap.scrollLeft;
+      var diff = i - currentIndex(from);
+      if (diff >  n / 2) diff -= n;
+      if (diff < -n / 2) diff += n;
+      var aligned = originStart + Math.round((loopPos(from) - originStart) / stepW()) * stepW();
+      moveBy(aligned - loopPos(from) + diff * stepW(), 600);
+      updateDots();
+    }
+
+    /* ── Arrastrar con el ratón (en táctil ya funciona el swipe nativo) ── */
     var drag = null, dragged = false;
 
     wrap.addEventListener('pointerdown', function (e) {
@@ -583,34 +649,52 @@
       var lastY = window.scrollY;
       var lastWheel = 0;
       var edgeGesture = false;  /* el gesto actual ya ha tocado el final */
+      var leavingUntil = 0;     /* saliendo de la sección: no tocar nada */
 
+      /* Recorrido: hasta que el último proyecto llega al inicio (todos los puntos) */
       function wheelLimit() {
-        var padX = parseFloat(getComputedStyle(grid).paddingLeft) || 0;
-        return Math.max(0, setW - wrap.clientWidth + padX);
+        return Math.max(0, (n - 1) * stepW());
       }
+      var alignT, lastDir = 1;
 
+      /* "Activa" cuando work ocupa la mayor parte de la pantalla, aunque
+         el ajuste automático entre secciones aún no haya terminado: así
+         un giro rápido de rueda no se salta la sección. */
       function workActive() {
-        return Math.abs(workSec.getBoundingClientRect().top) < 4;
+        return Math.abs(workSec.getBoundingClientRect().top) < window.innerHeight * 0.45;
       }
 
       /* Al entrar desde arriba empieza al principio; desde abajo, al final */
+      var scrollRaf = 0;
       window.addEventListener('scroll', function () {
-        var active = workActive();
-        if (active && !wasActive) {
-          acc = (lastY > workSec.offsetTop) ? wheelLimit() : 0;
-          edgeGesture = false;
-        }
-        wasActive = active;
-        lastY = window.scrollY;
+        if (scrollRaf) return;
+        scrollRaf = requestAnimationFrame(function () {
+          scrollRaf = 0;
+          var active = workActive();
+          if (active && !wasActive) {
+            acc = (lastY > workSec.offsetTop) ? wheelLimit() : 0;
+            edgeGesture = false;
+          }
+          wasActive = active;
+          lastY = window.scrollY;
+        });
       }, { passive: true });
 
       window.addEventListener('wheel', function (e) {
-        if (!setW || e.ctrlKey) return;
-        if (e.target.closest && e.target.closest('.overlay')) return;
+        if (!setW || e.ctrlKey || overlayOpen) return;
         if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;  /* gesto horizontal: nativo */
-        if (!workActive()) return;
 
         var now = performance.now();
+        if (now < leavingUntil) { e.preventDefault(); return; }  /* dejar terminar la salida */
+        if (!workActive()) return;
+
+        /* Recién llegados (el scroll listener aún no se ha enterado) */
+        if (!wasActive) {
+          wasActive = true;
+          acc = (window.scrollY > workSec.offsetTop) ? wheelLimit() : 0;
+          edgeGesture = false;
+        }
+
         var sameGesture = (now - lastWheel) < 220;
         lastWheel = now;
         if (!sameGesture) edgeGesture = false;
@@ -620,22 +704,44 @@
         var atEnd   = dy > 0 && acc >= limit - 1;
         var atStart = dy < 0 && acc <= 1;
 
+        e.preventDefault();
+
         if (atEnd || atStart) {
-          e.preventDefault();
           /* El gesto que llega al final no sale de la sección (evita que la
              inercia del trackpad salte a contact); el siguiente gesto sí. */
           if (edgeGesture) return;
-          edgeGesture = true;
           var next = atEnd ? workSec.nextElementSibling : workSec.previousElementSibling;
-          if (next) next.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+          if (next) {
+            leavingUntil = now + 700;
+            next.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+          }
           return;
         }
 
-        e.preventDefault();
+        /* Si el ajuste a la sección aún no ha terminado, encajarla */
+        if (Math.abs(workSec.getBoundingClientRect().top) > 2) {
+          workSec.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+        }
+
         var d = Math.max(-acc, Math.min(limit - acc, dy));
         acc += d;
+        lastDir = d > 0 ? 1 : -1;
         if (acc <= 1 || acc >= limit - 1) edgeGesture = true;
         moveBy(d, 380);
+        updateDots();
+
+        /* Al soltar la rueda, encajar en el siguiente proyecto en la
+           dirección del movimiento (cada giro avanza al menos uno) */
+        clearTimeout(alignT);
+        alignT = setTimeout(function () {
+          var lp = loopPos(anim ? anim.to : wrap.scrollLeft);
+          var f  = (lp - originStart) / stepW();
+          var k  = lastDir > 0 ? Math.ceil(f - 0.04) : Math.floor(f + 0.04);
+          var dd = originStart + k * stepW() - lp;
+          if (Math.abs(dd) < 1) return;
+          acc = Math.max(0, Math.min(wheelLimit(), acc + dd));
+          moveBy(dd, 320);
+        }, 180);
       }, { passive: false });
     }
   }());
@@ -650,7 +756,14 @@
     document.documentElement.style.setProperty('--real-vh', (window.innerHeight * 0.01) + 'px');
   }
   setRealVH();
-  window.addEventListener('resize', setRealVH);
+  /* Solo al girar o cambiar el ancho: al hacer scroll en el móvil la barra
+     del navegador cambia la altura y esto re-maquetaba toda la página. */
+  var vhW = window.innerWidth;
+  window.addEventListener('resize', function () {
+    if (window.innerWidth === vhW) return;
+    vhW = window.innerWidth;
+    setRealVH();
+  });
 
   /* ── Vídeos de fondo ──
      Se muestra el GIF hasta que el vídeo está realmente reproduciéndose.
@@ -661,6 +774,10 @@
 
   function setupBgVideo(video, gif, onShowVideo, onShowGif) {
     if (!video) return;
+
+    var section = video.closest('section') || video.parentElement;
+    var onScreen = true;
+    var autoPaused = false;   /* pausado por nosotros al salir de pantalla */
 
     function showGif() {
       video.style.display = 'none';
@@ -674,32 +791,49 @@
     }
     function tryPlay() {
       var p = video.play();
-      if (p && p.catch) p.catch(showGif);
+      /* AbortError = lo hemos pausado nosotros antes de que arrancara: no es un bloqueo */
+      if (p && p.catch) p.catch(function (err) {
+        if ((err && err.name === 'AbortError') || autoPaused) return;
+        showGif();
+      });
     }
 
     showGif();
     if (isIOS) {
+      /* En iPhone/iPad solo GIF: parar y descartar el vídeo oculto,
+         que antes se seguía descargando y reproduciendo sin verse */
       video.removeAttribute('autoplay');
-      video.preload = 'none';
+      video.pause();
+      while (video.firstChild) video.removeChild(video.firstChild);
+      video.removeAttribute('src');
+      video.load();
       return;
     }
 
     video.muted = true;
-    video.addEventListener('playing', showVideo);
+    video.addEventListener('playing', function () { autoPaused = false; showVideo(); });
     video.addEventListener('pause', function () {
-      if (document.visibilityState === 'visible') showGif();
+      /* Solo volver al GIF si lo ha parado el navegador, no nosotros */
+      if (!autoPaused && document.visibilityState === 'visible') showGif();
     });
     tryPlay();
 
     document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'visible') tryPlay();
+      if (document.visibilityState === 'visible' && onScreen) tryPlay();
     });
 
-    /* Reintenta al volver a verse en pantalla */
+    /* Fuera de pantalla se pausa: dos vídeos a pantalla completa
+       decodificándose sin verse restaban fluidez al resto de la web. */
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (entries) {
-        if (entries[0].isIntersecting && video.paused) tryPlay();
-      }, { threshold: 0.1 }).observe(video.parentElement || video);
+        onScreen = entries[0].isIntersecting && entries[0].intersectionRatio > 0;
+        if (onScreen) {
+          if (video.paused) tryPlay();
+        } else if (!video.paused) {
+          autoPaused = true;
+          video.pause();
+        }
+      }, { threshold: 0 }).observe(section);
     }
   }
 
@@ -715,5 +849,23 @@
     document.querySelector('.contact-bg-video'),
     document.querySelector('.contact-bg-gif')
   );
+
+  /* ── Precarga en segundo plano ──
+     Las imágenes de los proyectos se cargan "lazy" para no competir con
+     los vídeos al entrar. Cuando la página ya ha cargado, se van pidiendo
+     poco a poco para que al abrir un proyecto ya estén listas. */
+  window.addEventListener('load', function () {
+    var pending = Array.prototype.slice.call(document.querySelectorAll('img[loading="lazy"]'));
+    var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 200); };
+    function next() {
+      var img = pending.shift();
+      if (!img) return;
+      img.loading = 'eager';
+      if (img.complete) { idle(next); return; }
+      img.addEventListener('load', function () { idle(next); }, { once: true });
+      img.addEventListener('error', function () { idle(next); }, { once: true });
+    }
+    setTimeout(function () { idle(next); }, 1500);
+  });
 
 })();
