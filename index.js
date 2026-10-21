@@ -487,6 +487,88 @@
         wrap.scrollLeft = sl - setW;
       }
     }, { passive: true });
+
+    /* ── Navegación sin trackpad: flechas + arrastrar con ratón ── */
+
+    /* Lleva una posición "virtual" al tramo de originales (bucle) */
+    function loopPos(x) {
+      if (!setW) return x;
+      while (x < originStart) x += setW;
+      while (x >= originStart + setW) x -= setW;
+      return x;
+    }
+
+    function stepW() {
+      var card = grid.querySelector('.project-card');
+      var gap  = parseFloat(getComputedStyle(grid).columnGap) || 0;
+      return card ? card.getBoundingClientRect().width + gap : wrap.clientWidth * 0.8;
+    }
+
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var anim = null, rafId = 0;
+
+    function tick(now) {
+      if (!anim) { rafId = 0; return; }
+      var p = Math.min(1, (now - anim.start) / anim.dur);
+      var e = 1 - Math.pow(1 - p, 3);              /* ease-out */
+      anim.cur = anim.from + (anim.to - anim.from) * e;
+      wrap.scrollLeft = loopPos(anim.cur);
+      if (p < 1) { rafId = requestAnimationFrame(tick); }
+      else { anim = null; rafId = 0; }
+    }
+
+    function go(dir) {
+      var cur    = anim ? anim.cur : wrap.scrollLeft;
+      var target = (anim ? anim.to : cur) + stepW() * dir;  /* clics seguidos se acumulan */
+      if (reduceMotion) { anim = null; wrap.scrollLeft = loopPos(target); return; }
+      anim = { from: cur, to: target, cur: cur, start: performance.now(), dur: 550 };
+      if (!rafId) rafId = requestAnimationFrame(tick);
+    }
+
+    var btnPrev = document.getElementById('workPrev');
+    var btnNext = document.getElementById('workNext');
+    if (btnPrev) btnPrev.addEventListener('click', function () { go(-1); });
+    if (btnNext) btnNext.addEventListener('click', function () { go(1); });
+
+    /* Arrastrar con el ratón (en táctil ya funciona el swipe nativo) */
+    var drag = null, dragged = false;
+
+    wrap.addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      drag = { startX: e.clientX, lastX: e.clientX };
+      dragged = false;
+    });
+
+    window.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      var dx = e.clientX - drag.lastX;
+      drag.lastX = e.clientX;
+      if (!dragged && Math.abs(e.clientX - drag.startX) > 6) {
+        dragged = true;
+        anim = null;
+        wrap.classList.add('is-dragging');
+      }
+      if (dragged) wrap.scrollLeft -= dx;
+    });
+
+    function endDrag() {
+      if (!drag) return;
+      drag = null;
+      wrap.classList.remove('is-dragging');
+    }
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+
+    /* Si se ha arrastrado, no abrir el proyecto al soltar */
+    wrap.addEventListener('click', function (e) {
+      if (dragged) {
+        e.preventDefault();
+        e.stopPropagation();
+        dragged = false;
+      }
+    }, true);
+
+    wrap.addEventListener('dragstart', function (e) { e.preventDefault(); });
   }());
 
   /* ══════════════════════════════════════════════

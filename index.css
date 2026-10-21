@@ -431,6 +431,45 @@ section {
   .project-grid:hover .project-card:hover { opacity: 1; }
 }
 
+/* Arrastrar con ratón (sin trackpad) */
+.project-grid { user-select: none; -webkit-user-select: none; }
+.project-card img { -webkit-user-drag: none; }
+.project-grid-wrap.is-dragging,
+.project-grid-wrap.is-dragging .project-card { cursor: grabbing; }
+
+/* Flechas anterior / siguiente */
+.project-nav {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.3em;
+  margin-top: 24px;
+}
+
+.project-nav__btn {
+  background: none;
+  border: none;
+  font-size: clamp(20px, 1.6vw, 26px);
+  font-weight: 300;
+  line-height: 1;
+  color: var(--text);
+  padding: 0.1em 0.3em;
+  border-radius: 2px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.project-nav__btn:hover,
+.project-nav__btn:focus-visible {
+  background: var(--text);
+  color: var(--bg);
+  outline: none;
+}
+
+/* En táctil se desliza con el dedo: sin flechas */
+@media (hover: none) {
+  .project-nav { display: none; }
+}
+
 .project-card__cover {
   width: 100%;
   overflow: hidden;
