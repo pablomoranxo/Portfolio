@@ -201,6 +201,7 @@
      OVERLAY
      ══════════════════════════════════════════════ */
   function openOverlay(which) {
+    if (overlayOpen) { overlayOpen = which; return; }   /* ya abierto: conservar la posición guardada */
     overlayOpen = which;
     document.documentElement.style.scrollSnapType = 'none';
     var sy = window.scrollY;
@@ -246,11 +247,7 @@
       '<a class="related__more" href="#work">‹ ' + label + '</a>';
     detailRelated.querySelector('.related__more').addEventListener('click', function (e) {
       e.preventDefault();
-      closeOverlay();
-      requestAnimationFrame(function () {
-        var work = document.getElementById('work');
-        if (work) work.scrollIntoView({ behavior: 'instant' });
-      });
+      closeProjectUI();   /* vuelve a work, donde estaba */
     });
   }
 
@@ -286,10 +283,14 @@
   /* ══════════════════════════════════════════════
      MOSTRAR PROYECTO
      ══════════════════════════════════════════════ */
-  function showProject(id) {
+  function showProject(id, fromHistory) {
     viewDetail.querySelectorAll('.detail').forEach(function (d) { d.style.display = 'none'; });
     var panel = document.getElementById('detail-' + id);
     if (!panel) return;
+
+    /* Historial: el proyecto tiene su propia dirección (#nido…), así el
+       botón "atrás" del navegador cierra el proyecto en vez de salir de la web */
+    if (!fromHistory) history.pushState({ project: id, ours: true }, '', '#' + id);
 
     viewDetail.style.display = 'flex';
     panel.style.display = 'flex';
@@ -309,11 +310,47 @@
   }
 
   /* ══════════════════════════════════════════════
+     HISTORIAL — atrás / adelante del navegador
+     ══════════════════════════════════════════════ */
+  function cleanUrl() { return location.pathname + location.search; }
+
+  /* Cerrar el proyecto con la X, Escape o "ver más proyectos" */
+  function closeProjectUI() {
+    var st = history.state;
+    if (st && st.ours && st.project) {
+      if (st.lb) history.go(-2); else history.back();   /* popstate hace el cierre */
+    } else {
+      closeOverlay();
+      history.replaceState(null, '', cleanUrl());
+    }
+  }
+
+  /* Cerrar la foto ampliada con la ×, Escape o clic fuera */
+  function closeLightboxUI() {
+    var st = history.state;
+    if (st && st.ours && st.lb) history.back();
+    else closeLightbox();
+  }
+
+  window.addEventListener('popstate', function (e) {
+    var st = e.state || {};
+    if (!st.lb && lightbox.classList.contains('open')) closeLightbox();
+    if (st.project) {
+      if (currentProjectId() !== st.project) showProject(st.project, true);
+    } else if (overlayOpen) {
+      closeOverlay();
+    }
+  });
+
+  /* ══════════════════════════════════════════════
      HEADER — cerrar overlay al navegar
      ══════════════════════════════════════════════ */
   document.querySelectorAll('.header-name, .header-nav-link').forEach(function (link) {
     link.addEventListener('click', function () {
-      if (overlayOpen) closeOverlay();
+      if (overlayOpen) {
+        closeOverlay();
+        history.replaceState(null, '', cleanUrl());   /* el enlace añade su propio #ancla */
+      }
     });
   });
 
@@ -353,6 +390,9 @@
     lbImages = imgs;
     lbIndex  = startIdx;
     lbShow();
+    if (!lightbox.classList.contains('open') && history.state && history.state.project) {
+      history.pushState({ project: history.state.project, lb: true, ours: true }, '', location.hash);
+    }
     lightbox.classList.add('open');
   }
 
@@ -412,7 +452,7 @@
     });
   }());
 
-  if (lbClose) lbClose.addEventListener('click', closeLightbox);
+  if (lbClose) lbClose.addEventListener('click', closeLightboxUI);
 
   /* Deslizar con el dedo en el visor (móvil/tablet) */
   var lbTouchX = null, lbTouchY = null;
@@ -428,7 +468,7 @@
     if (dx < 0 && lbIndex < lbImages.length - 1) { lbIndex++; lbShow(); }
     if (dx > 0 && lbIndex > 0) { lbIndex--; lbShow(); }
   }, { passive: true });
-  lightbox.addEventListener('click', function (e) { if (e.target === lightbox) closeLightbox(); });
+  lightbox.addEventListener('click', function (e) { if (e.target === lightbox) closeLightboxUI(); });
 
   if (lbPrev) {
     lbPrev.addEventListener('click', function () {
@@ -447,13 +487,13 @@
      ══════════════════════════════════════════════ */
   document.addEventListener('keydown', function (e) {
     if (lightbox.classList.contains('open')) {
-      if (e.key === 'Escape')     closeLightbox();
+      if (e.key === 'Escape')     closeLightboxUI();
       if (e.key === 'ArrowLeft'  && lbPrev && !lbPrev.hidden) lbPrev.click();
       if (e.key === 'ArrowRight' && lbNext && !lbNext.hidden) lbNext.click();
       return;
     }
     if (overlayOpen === 'detail') {
-      if (e.key === 'Escape')     closeOverlay();
+      if (e.key === 'Escape')     closeProjectUI();
       if (e.key === 'ArrowLeft'  && detailPrev && !detailPrev.hidden) detailPrev.click();
       if (e.key === 'ArrowRight' && detailNext && !detailNext.hidden) detailNext.click();
     }
@@ -841,6 +881,16 @@
     document.querySelector('.contact-bg-video'),
     document.querySelector('.contact-bg-gif')
   );
+
+  /* Dirección con proyecto (p. ej. xostoi.com/#gofind): abrirlo al entrar */
+  (function () {
+    var id = location.hash.replace('#', '');
+    if (projects.indexOf(id) === -1) return;
+    var work = document.getElementById('work');
+    if (work) work.scrollIntoView({ behavior: 'instant' });   /* al cerrar, quedar en work */
+    history.replaceState({ project: id, ours: false }, '', '#' + id);
+    showProject(id, true);
+  }());
 
   /* ── Precarga en segundo plano ──
      Las imágenes de los proyectos se cargan "lazy" para no competir con
