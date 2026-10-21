@@ -859,6 +859,120 @@ section {
 }
 
 /* ============================================
+   PROYECTO EN FORMATO GALERÍA (prueba: Nido)
+   ============================================ */
+#view-detail.is-gallery {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: calc(var(--header-h) + 48px) var(--pad-x) 120px;
+  flex-direction: column;
+}
+
+#view-detail.is-gallery #detail-related { position: fixed; }
+
+.detail--gallery {
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Cabecera: título a la izquierda, texto e ideación a la derecha */
+.gallery-head {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px clamp(16px, 2vw, 24px);
+  align-items: start;          /* al abrir "Ideación" el título no se mueve */
+  margin-bottom: clamp(32px, 5vh, 56px);
+}
+
+.gallery-head__title { grid-column: 1 / 7; }
+.gallery-head__text  { grid-column: 8 / -1; }
+
+.gallery-head__name {
+  font-size: clamp(48px, 7vw, 96px);
+  font-weight: 400;
+  letter-spacing: -0.1em;
+  line-height: 1;
+  margin-bottom: 0.25em;
+  color: var(--text);
+}
+
+.gallery-head .detail__meta { margin-top: 0; }
+
+.gallery-head__year {
+  font-size: 13px;
+  letter-spacing: -0.025em;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.gallery-head .detail__desc {
+  font-size: 15px;
+  line-height: 1.55;
+  margin-top: 0.6em;
+  max-width: 46ch;
+}
+
+.gallery-head .detail__process { max-width: 46ch; }
+
+/* Galería: filas justificadas, cada imagen con su proporción real (sin recortes).
+   --r = ancho / alto de la imagen. */
+.detail__gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gallery__item {
+  flex: var(--r) 1 calc(var(--r) * 280px);
+  margin: 0;
+  background: #f5f5f5;        /* las fotos con fondo blanco se leen como piezas */
+  aspect-ratio: var(--r);
+  overflow: hidden;
+}
+
+/* Que la última fila no se estire de más */
+.detail__gallery::after {
+  content: '';
+  flex: 10 1 0;
+}
+
+.gallery__item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;          /* misma proporción que el hueco: no recorta */
+  cursor: zoom-in;
+  mix-blend-mode: multiply;   /* el blanco de la foto toma el gris del hueco */
+  transition: opacity 0.2s ease;
+}
+
+.gallery__item img:hover { opacity: 0.82; }
+
+@media (max-width: 768px) {
+  #view-detail.is-gallery { padding: calc(var(--header-h) + 24px) 20px 96px; }
+  .gallery-head { grid-template-columns: 1fr; gap: 20px; margin-bottom: 24px; }
+  .gallery-head__title,
+  .gallery-head__text { grid-column: 1; }
+  .gallery-head .detail__desc { font-size: 14px; }
+  .gallery__item { flex: 1 1 100%; }
+  .detail__gallery { gap: 6px; }
+}
+
+/* Contador del visor */
+#lbCount {
+  position: fixed;
+  bottom: 24px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: #fff;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* ============================================
    LIGHTBOX
    ============================================ */
 #lightbox {

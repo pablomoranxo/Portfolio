@@ -260,6 +260,9 @@
 
     viewDetail.style.display = 'flex';
     panel.style.display = 'flex';
+    /* Proyectos en formato galería: la vista hace scroll vertical */
+    viewDetail.classList.toggle('is-gallery', panel.classList.contains('detail--gallery'));
+    viewDetail.scrollTop = 0;
     openOverlay('detail');
 
     var idx = projects.indexOf(id);
@@ -299,14 +302,24 @@
      LIGHTBOX
      ══════════════════════════════════════════════ */
   var lbImages = [], lbIndex = 0;
+  var lbCount = document.getElementById('lbCount');
+
+  /* Muestra la imagen actual, actualiza flechas y contador, y precarga las vecinas */
+  function lbShow() {
+    lbImg.src = lbImages[lbIndex];
+    if (lbPrev) lbPrev.hidden = lbIndex === 0;
+    if (lbNext) lbNext.hidden = lbIndex === lbImages.length - 1;
+    if (lbCount) lbCount.textContent = lbImages.length > 1 ? (lbIndex + 1) + ' / ' + lbImages.length : '';
+    [lbIndex - 1, lbIndex + 1].forEach(function (k) {
+      if (lbImages[k]) { var pre = new Image(); pre.src = lbImages[k]; }
+    });
+  }
 
   function openLightbox(imgs, startIdx) {
     lbImages = imgs;
     lbIndex  = startIdx;
-    lbImg.src = lbImages[lbIndex];
+    lbShow();
     lightbox.classList.add('open');
-    if (lbPrev) lbPrev.hidden = lbIndex === 0;
-    if (lbNext) lbNext.hidden = lbIndex === lbImages.length - 1;
   }
 
   function closeLightbox() {
@@ -321,6 +334,15 @@
     var strip   = img.closest('.detail__strip');
     var allImgs = Array.prototype.slice.call(strip.querySelectorAll('img'));
     openLightbox(allImgs.map(function (i) { return i.src; }), allImgs.indexOf(img));
+  });
+
+  /* Galería: clic en una foto → visor con todas las fotos del proyecto */
+  viewDetail.addEventListener('click', function (e) {
+    var img = e.target.closest('.detail__gallery img');
+    if (!img) return;
+    var gallery = img.closest('.detail__gallery');
+    var allImgs = Array.prototype.slice.call(gallery.querySelectorAll('img'));
+    openLightbox(allImgs.map(function (i) { return i.currentSrc || i.src; }), allImgs.indexOf(img));
   });
 
   viewDetail.addEventListener('click', function (e) {
@@ -351,27 +373,32 @@
   }());
 
   if (lbClose) lbClose.addEventListener('click', closeLightbox);
+
+  /* Deslizar con el dedo en el visor (móvil/tablet) */
+  var lbTouchX = null, lbTouchY = null;
+  lightbox.addEventListener('touchstart', function (e) {
+    lbTouchX = e.touches[0].clientX; lbTouchY = e.touches[0].clientY;
+  }, { passive: true });
+  lightbox.addEventListener('touchend', function (e) {
+    if (lbTouchX === null) return;
+    var dx = e.changedTouches[0].clientX - lbTouchX;
+    var dy = e.changedTouches[0].clientY - lbTouchY;
+    lbTouchX = null;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    if (dx < 0 && lbIndex < lbImages.length - 1) { lbIndex++; lbShow(); }
+    if (dx > 0 && lbIndex > 0) { lbIndex--; lbShow(); }
+  }, { passive: true });
   lightbox.addEventListener('click', function (e) { if (e.target === lightbox) closeLightbox(); });
 
   if (lbPrev) {
     lbPrev.addEventListener('click', function () {
-      if (lbIndex > 0) {
-        lbIndex--;
-        lbImg.src = lbImages[lbIndex];
-        lbPrev.hidden = lbIndex === 0;
-        if (lbNext) lbNext.hidden = lbIndex === lbImages.length - 1;
-      }
+      if (lbIndex > 0) { lbIndex--; lbShow(); }
     });
   }
 
   if (lbNext) {
     lbNext.addEventListener('click', function () {
-      if (lbIndex < lbImages.length - 1) {
-        lbIndex++;
-        lbImg.src = lbImages[lbIndex];
-        if (lbPrev) lbPrev.hidden = lbIndex === 0;
-        lbNext.hidden = lbIndex === lbImages.length - 1;
-      }
+      if (lbIndex < lbImages.length - 1) { lbIndex++; lbShow(); }
     });
   }
 
@@ -670,8 +697,35 @@
   var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
+  /* Safari de Mac (no Chrome/Firefox/Edge, no iPhone/iPad) */
+  var isMacSafari = !isIOS && /Safari/.test(navigator.userAgent) &&
+                    !/Chrome|Chromium|CriOS|FxiOS|Edg|OPR|Android/.test(navigator.userAgent);
+
   function setupBgVideo(video, gif, onShowVideo, onShowGif) {
     if (!video) return;
+
+    /* Safari de Mac: con el modo de bajo consumo pone sus controles (botón
+       de pausa y velo gris) encima de los <video>, y no se pueden ocultar.
+       Safari sí admite un MP4 dentro de <img>: se reproduce como un GIF,
+       sin controles y con la calidad del vídeo. Si fallara, queda el GIF. */
+    if (isMacSafari && gif) {
+      var mp4 = video.querySelector('source[type="video/mp4"]');
+      if (mp4) {
+        var mp4Src = mp4.getAttribute('src');
+        video.removeAttribute('autoplay');
+        video.pause();
+        while (video.firstChild) video.removeChild(video.firstChild);
+        video.load();
+        video.style.display = 'none';
+        gif.style.display = 'block';
+        /* El GIF se ve mientras el MP4 se descarga; se cambia cuando está listo */
+        var probe = new Image();
+        probe.onload = function () { gif.src = mp4Src; };
+        probe.src = mp4Src;
+        if (onShowGif) onShowGif();
+        return;
+      }
+    }
 
     var section = video.closest('section') || video.parentElement;
     var onScreen = true;
