@@ -447,36 +447,33 @@ section {
 .project-grid-wrap.is-dragging,
 .project-grid-wrap.is-dragging .project-card { cursor: grabbing; }
 
-/* Flechas anterior / siguiente */
-/* En la misma fila que el título "work", a la derecha */
-#work .section-title { grid-column: 1 / 9; grid-row: 1; }
-
-.project-nav {
-  grid-column: 9 / -1;
-  grid-row: 1;
-  align-self: end;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.3em;
-  margin-bottom: clamp(29px, 4.2vw, 58px);   /* = margen inferior del título */
-}
-
-@media (max-width: 768px) {
-  #work .section-title { grid-column: 1; }
-  .project-nav { grid-column: 1; grid-row: auto; margin-bottom: 16px; }
-}
+/* Flechas anterior / siguiente — flotando sobre los proyectos,
+   a media pantalla, una en cada extremo */
+#work { position: relative; }
 
 .project-nav__btn {
-  background: none;
+  position: absolute;
+  top: 50vh;                       /* la sección encaja arriba: = mitad de pantalla */
+  transform: translateY(-50%);
+  z-index: 5;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
-  font-size: clamp(20px, 1.6vw, 26px);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 20px;
   font-weight: 300;
   line-height: 1;
-  color: var(--text);
-  padding: 0.1em 0.3em;
-  border-radius: 2px;
+  box-shadow: 0 1px 8px rgba(10, 10, 10, 0.08);
   transition: background 0.15s ease, color 0.15s ease;
 }
+
+.project-nav__btn--prev { left:  max(8px, calc(var(--pad-x) / 2 - 24px)); }
+.project-nav__btn--next { right: max(8px, calc(var(--pad-x) / 2 - 24px)); }
 
 .project-nav__btn:hover,
 .project-nav__btn:focus-visible {
@@ -487,7 +484,7 @@ section {
 
 /* En táctil se desliza con el dedo: sin flechas */
 @media (hover: none) {
-  .project-nav { display: none; }
+  .project-nav__btn { display: none; }
 }
 
 .project-card__cover {

@@ -517,13 +517,15 @@
       else { anim = null; rafId = 0; }
     }
 
-    function go(dir) {
+    function moveBy(px, dur) {
       var cur    = anim ? anim.cur : wrap.scrollLeft;
-      var target = (anim ? anim.to : cur) + stepW() * dir;  /* clics seguidos se acumulan */
+      var target = (anim ? anim.to : cur) + px;   /* movimientos seguidos se acumulan */
       if (reduceMotion) { anim = null; wrap.scrollLeft = loopPos(target); return; }
-      anim = { from: cur, to: target, cur: cur, start: performance.now(), dur: 550 };
+      anim = { from: cur, to: target, cur: cur, start: performance.now(), dur: dur };
       if (!rafId) rafId = requestAnimationFrame(tick);
     }
+
+    function go(dir) { moveBy(stepW() * dir, 550); }
 
     var btnPrev = document.getElementById('workPrev');
     var btnNext = document.getElementById('workNext');
@@ -569,6 +571,73 @@
     }, true);
 
     wrap.addEventListener('dragstart', function (e) { e.preventDefault(); });
+
+    /* ── Scroll vertical → horizontal en la sección work ──
+       Al llegar a work, la rueda recorre los proyectos en horizontal.
+       Cuando se han visto todos, el siguiente gesto continúa a contact
+       (o a info si se va hacia arriba). */
+    var workSec = document.getElementById('work');
+    if (workSec) {
+      var acc = 0;              /* recorrido horizontal hecho en esta visita */
+      var wasActive = false;
+      var lastY = window.scrollY;
+      var lastWheel = 0;
+      var edgeGesture = false;  /* el gesto actual ya ha tocado el final */
+
+      function wheelLimit() {
+        var padX = parseFloat(getComputedStyle(grid).paddingLeft) || 0;
+        return Math.max(0, setW - wrap.clientWidth + padX);
+      }
+
+      function workActive() {
+        return Math.abs(workSec.getBoundingClientRect().top) < 4;
+      }
+
+      /* Al entrar desde arriba empieza al principio; desde abajo, al final */
+      window.addEventListener('scroll', function () {
+        var active = workActive();
+        if (active && !wasActive) {
+          acc = (lastY > workSec.offsetTop) ? wheelLimit() : 0;
+          edgeGesture = false;
+        }
+        wasActive = active;
+        lastY = window.scrollY;
+      }, { passive: true });
+
+      window.addEventListener('wheel', function (e) {
+        if (!setW || e.ctrlKey) return;
+        if (e.target.closest && e.target.closest('.overlay')) return;
+        if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;  /* gesto horizontal: nativo */
+        if (!workActive()) return;
+
+        var now = performance.now();
+        var sameGesture = (now - lastWheel) < 220;
+        lastWheel = now;
+        if (!sameGesture) edgeGesture = false;
+
+        var dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? wrap.clientWidth : 1);
+        var limit = wheelLimit();
+        var atEnd   = dy > 0 && acc >= limit - 1;
+        var atStart = dy < 0 && acc <= 1;
+
+        if (atEnd || atStart) {
+          e.preventDefault();
+          /* El gesto que llega al final no sale de la sección (evita que la
+             inercia del trackpad salte a contact); el siguiente gesto sí. */
+          if (edgeGesture) return;
+          edgeGesture = true;
+          var next = atEnd ? workSec.nextElementSibling : workSec.previousElementSibling;
+          if (next) next.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+          return;
+        }
+
+        e.preventDefault();
+        var d = Math.max(-acc, Math.min(limit - acc, dy));
+        acc += d;
+        if (acc <= 1 || acc >= limit - 1) edgeGesture = true;
+        moveBy(d, 380);
+      }, { passive: false });
+    }
   }());
 
   /* ══════════════════════════════════════════════
@@ -583,55 +652,68 @@
   setRealVH();
   window.addEventListener('resize', setRealVH);
 
-  var bgVideo = document.querySelector('.hero-bg-video');
-  var bgGif   = document.querySelector('.hero-bg-gif');
-  var isIOS   = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  /* ── Vídeos de fondo ──
+     Se muestra el GIF hasta que el vídeo está realmente reproduciéndose.
+     Si Safari lo pausa o bloquea (p. ej. modo de bajo consumo), se vuelve
+     al GIF en lugar de enseñar el botón de play. iPhone/iPad: solo GIF. */
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-  if (isIOS) {
-    if (bgVideo) bgVideo.style.display = 'none';
-    if (bgGif)   bgGif.style.display   = 'block';
-  } else {
-    if (bgGif) {
-      bgGif.classList.add('desktop-fallback');
-      bgGif.style.display = 'block';
+  function setupBgVideo(video, gif, onShowVideo, onShowGif) {
+    if (!video) return;
+
+    function showGif() {
+      video.style.display = 'none';
+      if (gif) gif.style.display = 'block';
+      if (onShowGif) onShowGif();
     }
-    if (bgVideo) {
-      bgVideo.style.display = 'none';
-      bgVideo.muted = true;
-      bgVideo.play().catch(function () {});
-      bgVideo.addEventListener('playing', function () {
-        bgVideo.style.display = 'block';
-        if (bgGif) {
-          bgGif.style.display = 'none';
-          bgGif.classList.remove('desktop-fallback');
-        }
-      }, { once: true });
-      document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible') bgVideo.play().catch(function () {});
-      });
+    function showVideo() {
+      video.style.display = 'block';
+      if (gif) gif.style.display = 'none';
+      if (onShowVideo) onShowVideo();
+    }
+    function tryPlay() {
+      var p = video.play();
+      if (p && p.catch) p.catch(showGif);
+    }
+
+    showGif();
+    if (isIOS) {
+      video.removeAttribute('autoplay');
+      video.preload = 'none';
+      return;
+    }
+
+    video.muted = true;
+    video.addEventListener('playing', showVideo);
+    video.addEventListener('pause', function () {
+      if (document.visibilityState === 'visible') showGif();
+    });
+    tryPlay();
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') tryPlay();
+    });
+
+    /* Reintenta al volver a verse en pantalla */
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting && video.paused) tryPlay();
+      }, { threshold: 0.1 }).observe(video.parentElement || video);
     }
   }
 
-  var contactVideo = document.querySelector('.contact-bg-video');
-  var contactGif   = document.querySelector('.contact-bg-gif');
+  var bgGif = document.querySelector('.hero-bg-gif');
+  setupBgVideo(
+    document.querySelector('.hero-bg-video'),
+    bgGif,
+    function () { if (bgGif) bgGif.classList.remove('desktop-fallback'); },
+    function () { if (bgGif && !isIOS) bgGif.classList.add('desktop-fallback'); }
+  );
 
-  if (isIOS) {
-    if (contactVideo) contactVideo.style.display = 'none';
-    if (contactGif)   contactGif.style.display   = 'block';
-  } else {
-    if (contactGif) contactGif.style.display = 'block';
-    if (contactVideo) {
-      contactVideo.style.display = 'none';
-      contactVideo.muted = true;
-      contactVideo.play().catch(function () {});
-      contactVideo.addEventListener('playing', function () {
-        contactVideo.style.display = 'block';
-        if (contactGif) contactGif.style.display = 'none';
-      }, { once: true });
-      document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible') contactVideo.play().catch(function () {});
-      });
-    }
-  }
+  setupBgVideo(
+    document.querySelector('.contact-bg-video'),
+    document.querySelector('.contact-bg-gif')
+  );
 
 })();
